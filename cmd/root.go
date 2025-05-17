@@ -5,6 +5,11 @@ import (
 	"os"
 )
 
+// Variables for flags
+var mode int
+var ifilePath string
+var ofilePath string
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "thoth",

@@ -6,11 +6,6 @@ import (
 	"thoth/internal/util"
 )
 
-// Variables for flags
-var mode int
-var ifilePath string
-var ofilePath string
-
 var saniCmd = &cobra.Command{
 	Use:   "sanitize",
 	Short: "Sanitize Hash File",
