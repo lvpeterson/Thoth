@@ -15,7 +15,6 @@ func init() {
 	rootCmd.AddCommand(lmutilCmd)
 
 	// Define custom multi-character short flags
-	lmutilCmd.Flags().IntVarP(&mode, "mode", "m", 0, "Specify Hash Algorithm Utilize: https://hashcat.net/wiki/doku.php?id=example_hashes")
 	lmutilCmd.Flags().StringVarP(&ifilePath, "file", "f", "", "Path to the input file")
 	lmutilCmd.Flags().StringVarP(&ofilePath, "output", "o", "", "Path to the output file")
 }

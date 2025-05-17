@@ -26,5 +26,6 @@ func Execute() {
 }
 
 func init() {
-	// Initialization code here, if needed
+	// Disable the default completion command
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
 }
