@@ -1,6 +1,9 @@
 package hashes
 
-import "thoth/internal/util"
+import (
+	"math/rand"
+	"thoth/internal/util"
+)
 
 var hashMap map[int]string
 var hashDelim map[int]string
@@ -16,6 +19,17 @@ func HashCheck(mode int, hashString string) {
 		return
 	}
 
+}
+
+func GenerateRandomString() string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	length := rand.Intn(7) + 6 // Random length between 6 and 12
+
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }
 
 func init() {
