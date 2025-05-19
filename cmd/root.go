@@ -32,7 +32,7 @@ const (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "thoth",
+	Use:   "Thoth",
 	Short: "A tool for hash parsing",
 	Long:  `Thoth is a Sanitization and Desanitization utility for hashes to be used outside without worry of data leakage.`,
 }
