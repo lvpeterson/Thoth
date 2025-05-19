@@ -60,6 +60,9 @@ var lmutilCmd = &cobra.Command{
 		}
 		lines = strings.Split(string(content), "\n")
 		for _, line := range lines {
+			if line == "" {
+				continue
+			}
 			cracked := getFullString(line)
 			combinations := generateCaseCombinations(cracked)
 			for _, combo := range combinations {
