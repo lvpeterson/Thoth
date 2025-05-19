@@ -18,3 +18,10 @@ Thoth is a powerful command-line utility designed for processing and managing va
 ## Installation
 
 `go get https://github.com/lvpeterson/Thoth`
+
+## To Do
+Desanitization support for the following modes:
+- 5500
+- 5600
+- 13100
+- 18200
