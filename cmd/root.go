@@ -21,6 +21,15 @@ var mode int
 var ifilePath string
 var ofilePath string
 
+const (
+	ModeNTLM          = 1000
+	ModeLM            = 3000
+	ModeNetNTLMv1     = 5500
+	ModeNetNTLMv2     = 5600
+	ModeKerberosTGS   = 13100
+	ModeKerberosASREP = 18200
+)
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "thoth",

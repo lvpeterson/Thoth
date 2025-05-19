@@ -9,24 +9,15 @@ import (
 	"thoth/internal/util"
 )
 
-const (
-	ModeNTLM          = 1000
-	ModeLM            = 3000
-	ModeNetNTLMv1     = 5500
-	ModeNetNTLMv2     = 5600
-	ModeKerberosTGS   = 13100
-	ModeKerberosASREP = 18200
-)
+type saniHashProcessor func([]string) (string, error)
 
-type hashProcessor func([]string) (string, error)
-
-var modeProcessors = map[int]hashProcessor{
-	ModeNTLM:          processNTLM,
-	ModeLM:            processLM,
-	ModeNetNTLMv1:     processNetNTLM,
-	ModeNetNTLMv2:     processNetNTLM,
-	ModeKerberosTGS:   processKerberosTGS,
-	ModeKerberosASREP: processKerberosASREP,
+var saniModeProcessors = map[int]saniHashProcessor{
+	ModeNTLM:          saniProcessNTLM,
+	ModeLM:            saniProcessLM,
+	ModeNetNTLMv1:     saniProcessNetNTLM,
+	ModeNetNTLMv2:     saniProcessNetNTLM,
+	ModeKerberosTGS:   saniProcessKerberosTGS,
+	ModeKerberosASREP: saniProcessKerberosASREP,
 }
 
 var saniCmd = &cobra.Command{
@@ -65,7 +56,7 @@ var saniCmd = &cobra.Command{
 				return
 			}
 			hashArray := hashes.GetHashArray(mode, line)
-			if err := processHash(mode, hashArray, file); err != nil {
+			if err := saniProcessHash(mode, hashArray, file); err != nil {
 				util.Red(fmt.Sprintf("Error processing hash at line %d: %v", lineNum+1, err))
 				return
 			}
@@ -86,8 +77,8 @@ func init() {
 	saniCmd.Flags().StringVarP(&ofilePath, "output", "o", "", "Path to the output file")
 }
 
-func processHash(mode int, hashArray []string, file *os.File) error {
-	processor, exists := modeProcessors[mode]
+func saniProcessHash(mode int, hashArray []string, file *os.File) error {
+	processor, exists := saniModeProcessors[mode]
 	if !exists {
 		return fmt.Errorf("unsupported mode: %d", mode)
 	}
@@ -101,28 +92,28 @@ func processHash(mode int, hashArray []string, file *os.File) error {
 	return err
 }
 
-func processNTLM(hashArray []string) (string, error) {
+func saniProcessNTLM(hashArray []string) (string, error) {
 	return hashArray[3], nil
 }
 
-func processLM(hashArray []string) (string, error) {
+func saniProcessLM(hashArray []string) (string, error) {
 	return hashArray[2], nil
 }
 
-func processNetNTLM(hashArray []string) (string, error) {
+func saniProcessNetNTLM(hashArray []string) (string, error) {
 	hashArray[0] = hashes.GenerateRandomString()
 	hashArray[2] = hashes.GenerateRandomString()
 	return strings.Join(hashArray, ":"), nil
 }
 
-func processKerberosTGS(hashArray []string) (string, error) {
+func saniProcessKerberosTGS(hashArray []string) (string, error) {
 	hashArray[3] = "*" + hashes.GenerateRandomString()
 	hashArray[4] = hashes.GenerateRandomString()
 	hashArray[5] = hashes.GenerateRandomString() + "/" + hashes.GenerateRandomString() + "*"
 	return strings.Join(hashArray, "$"), nil
 }
 
-func processKerberosASREP(hashArray []string) (string, error) {
+func saniProcessKerberosASREP(hashArray []string) (string, error) {
 	asrepUser := strings.Split(hashArray[3], ":")
 	asrepUser[0] = hashes.GenerateRandomString() + "@" + hashes.GenerateRandomString() + "." + hashes.GenerateRandomString()
 	hashArray[3] = strings.Join(asrepUser, ":")

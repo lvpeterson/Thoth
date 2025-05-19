@@ -10,25 +10,12 @@ import (
 )
 
 var desanFilePath string
+var crackedHash map[string]string
 
-const (
-	ModeNTLM          = 1000
-	ModeLM            = 3000
-	ModeNetNTLMv1     = 5500
-	ModeNetNTLMv2     = 5600
-	ModeKerberosTGS   = 13100
-	ModeKerberosASREP = 18200
-)
+type desaniHashProcessor func([]string) (string, error)
 
-type hashProcessor func([]string) (string, error)
-
-var modeProcessors = map[int]hashProcessor{
-	ModeNTLM:          processNTLM,
-	ModeLM:            processLM,
-	ModeNetNTLMv1:     processNetNTLM,
-	ModeNetNTLMv2:     processNetNTLM,
-	ModeKerberosTGS:   processKerberosTGS,
-	ModeKerberosASREP: processKerberosASREP,
+var desaniModeProcessors = map[int]desaniHashProcessor{
+	ModeNTLM: desaniProcessNTLM,
 }
 
 var deSaniCmd = &cobra.Command{
@@ -36,8 +23,15 @@ var deSaniCmd = &cobra.Command{
 	Short: "Desanitize Crack File",
 	Long:  `Takes cracked results and compares against original hash and combines.`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		// File Stuff
 		if ifilePath == "" {
 			util.Red("You must provide a cracked hash file in order to desanitize.\n")
+			cmd.Usage()
+			return
+		}
+		if mode == 0 {
+			util.Red("You must provide a mode file in order to desanitize.\n")
 			cmd.Usage()
 			return
 		}
@@ -67,7 +61,20 @@ var deSaniCmd = &cobra.Command{
 		}
 		defer file.Close()
 
+		// Setup Map for Cracked Hashes:
+		crackedHash = make(map[string]string)
 		lines := strings.Split(string(content), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			hash := strings.Split(line, ":")
+			crackedHash[strings.TrimSpace(hash[0])] = strings.TrimSpace(hash[1])
+		}
+
+		// Process desanitization:
+		lines = strings.Split(string(origcontent), "\n")
 		for lineNum, line := range lines {
 			line = strings.TrimSpace(line)
 			if line == "" {
@@ -78,7 +85,7 @@ var deSaniCmd = &cobra.Command{
 				return
 			}
 			hashArray := hashes.GetHashArray(mode, line)
-			if err := processHash(mode, hashArray, file); err != nil {
+			if err := desaniProcessHash(mode, hashArray, file); err != nil {
 				util.Red(fmt.Sprintf("Error processing hash at line %d: %v", lineNum+1, err))
 				return
 			}
@@ -90,6 +97,28 @@ var deSaniCmd = &cobra.Command{
 		util.Green(fmt.Sprintf("Sanitized file saved to: %s", ofilePath))
 
 	},
+}
+
+func desaniProcessHash(mode int, hashArray []string, file *os.File) error {
+	processor, exists := desaniModeProcessors[mode]
+	if !exists {
+		return fmt.Errorf("unsupported mode: %d", mode)
+	}
+
+	result, err := processor(hashArray)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(file, result)
+	return err
+}
+
+func desaniProcessNTLM(hashArray []string) (string, error) {
+	if crackedHash[hashArray[3]] != "" {
+		return fmt.Sprintf(strings.Join(hashArray, ":") + " " + crackedHash[hashArray[3]]), nil
+	}
+	return "", nil
 }
 
 func init() {
