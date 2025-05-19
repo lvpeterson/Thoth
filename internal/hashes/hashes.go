@@ -1,9 +1,9 @@
 package hashes
 
 import (
+	"github.com/lvpeterson/Thoth/internal/util"
 	"math/rand"
 	"strings"
-	"thoth/internal/util"
 )
 
 var hashMap map[int]string

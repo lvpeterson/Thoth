@@ -1,7 +1,7 @@
 package main
 
 import (
-	"thoth/cmd"
+	"github.com/lvpeterson/Thoth/cmd"
 )
 
 func main() {

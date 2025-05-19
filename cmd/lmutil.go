@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/lvpeterson/Thoth/internal/util"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"strings"
-	"thoth/internal/util"
 )
 
 var crackedHashLM map[string]string

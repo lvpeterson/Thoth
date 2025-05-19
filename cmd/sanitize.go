@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/lvpeterson/Thoth/internal/hashes"
+	"github.com/lvpeterson/Thoth/internal/util"
 	"github.com/spf13/cobra"
 	"os"
 	"strings"
-	"thoth/internal/hashes"
-	"thoth/internal/util"
 )
 
 type saniHashProcessor func([]string) (string, error)

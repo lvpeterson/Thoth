@@ -1,4 +1,4 @@
-module thoth
+module github.com/lvpeterson/Thoth
 
 go 1.24
 
