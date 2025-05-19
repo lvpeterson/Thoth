@@ -9,24 +9,41 @@ import (
 	"thoth/internal/util"
 )
 
+const (
+	ModeNTLM          = 1000
+	ModeLM            = 3000
+	ModeNetNTLMv1     = 5500
+	ModeNetNTLMv2     = 5600
+	ModeKerberosTGS   = 13100
+	ModeKerberosASREP = 18200
+)
+
+type hashProcessor func([]string) (string, error)
+
+var modeProcessors = map[int]hashProcessor{
+	ModeNTLM:          processNTLM,
+	ModeLM:            processLM,
+	ModeNetNTLMv1:     processNetNTLM,
+	ModeNetNTLMv2:     processNetNTLM,
+	ModeKerberosTGS:   processKerberosTGS,
+	ModeKerberosASREP: processKerberosASREP,
+}
+
 var saniCmd = &cobra.Command{
 	Use:   "sanitize",
 	Short: "Sanitize Hash File",
 	Long:  `Sanitizes hash file based on hash module to be used.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if ifilePath == "" {
 			util.Red("You must provide a file to sanitize.\n")
 			cmd.Usage()
 			return
 		}
-
 		content, err := os.ReadFile(ifilePath)
 		if err != nil {
 			util.Red("Error reading in sanitized file")
 			return
 		}
-
 		if ofilePath == "" {
 			ofilePath = fmt.Sprintf("sanitized_%s.txt", ifilePath)
 		}
@@ -48,29 +65,9 @@ var saniCmd = &cobra.Command{
 				return
 			}
 			hashArray := hashes.GetHashArray(mode, line)
-			switch mode {
-			case 1000:
-				_, err = fmt.Fprintln(file, hashArray[3])
-			case 3000:
-				_, err = fmt.Fprintln(file, hashArray[2])
-			case 5500:
-				hashArray[0] = hashes.GenerateRandomString()
-				hashArray[2] = hashes.GenerateRandomString()
-				_, err = fmt.Fprintln(file, strings.Join(hashArray, ":"))
-			case 5600:
-				hashArray[0] = hashes.GenerateRandomString()
-				hashArray[2] = hashes.GenerateRandomString()
-				_, err = fmt.Fprintln(file, strings.Join(hashArray, ":"))
-			case 13100:
-				hashArray[3] = "*" + hashes.GenerateRandomString()
-				hashArray[4] = hashes.GenerateRandomString()
-				hashArray[5] = hashes.GenerateRandomString() + "/" + hashes.GenerateRandomString() + "*"
-				_, err = fmt.Fprintln(file, strings.Join(hashArray, "$"))
-			case 18200:
-				asrepUser := strings.Split(hashArray[3], ":")
-				asrepUser[0] = hashes.GenerateRandomString() + "@" + hashes.GenerateRandomString() + "." + hashes.GenerateRandomString()
-				hashArray[3] = strings.Join(asrepUser, ":")
-				_, err = fmt.Fprintln(file, strings.Join(hashArray, "$"))
+			if err := processHash(mode, hashArray, file); err != nil {
+				util.Red(fmt.Sprintf("Error processing hash at line %d: %v", lineNum+1, err))
+				return
 			}
 			if err != nil {
 				util.Red(fmt.Sprintf("Error writing to file at line %d: %v", lineNum, err))
@@ -83,11 +80,53 @@ var saniCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(saniCmd)
-
 	// Define custom multi-character short flags
 	saniCmd.Flags().IntVarP(&mode, "mode", "m", 0, "Specify Hash Algorithm Utilize: https://hashcat.net/wiki/doku.php?id=example_hashes")
 	saniCmd.Flags().StringVarP(&ifilePath, "file", "f", "", "Path to the input file")
 	saniCmd.Flags().StringVarP(&ofilePath, "output", "o", "", "Path to the output file")
+}
+
+func processHash(mode int, hashArray []string, file *os.File) error {
+	processor, exists := modeProcessors[mode]
+	if !exists {
+		return fmt.Errorf("unsupported mode: %d", mode)
+	}
+
+	result, err := processor(hashArray)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(file, result)
+	return err
+}
+
+func processNTLM(hashArray []string) (string, error) {
+	return hashArray[3], nil
+}
+
+func processLM(hashArray []string) (string, error) {
+	return hashArray[2], nil
+}
+
+func processNetNTLM(hashArray []string) (string, error) {
+	hashArray[0] = hashes.GenerateRandomString()
+	hashArray[2] = hashes.GenerateRandomString()
+	return strings.Join(hashArray, ":"), nil
+}
+
+func processKerberosTGS(hashArray []string) (string, error) {
+	hashArray[3] = "*" + hashes.GenerateRandomString()
+	hashArray[4] = hashes.GenerateRandomString()
+	hashArray[5] = hashes.GenerateRandomString() + "/" + hashes.GenerateRandomString() + "*"
+	return strings.Join(hashArray, "$"), nil
+}
+
+func processKerberosASREP(hashArray []string) (string, error) {
+	asrepUser := strings.Split(hashArray[3], ":")
+	asrepUser[0] = hashes.GenerateRandomString() + "@" + hashes.GenerateRandomString() + "." + hashes.GenerateRandomString()
+	hashArray[3] = strings.Join(asrepUser, ":")
+	return strings.Join(hashArray, "$"), nil
 }
 
 /*
@@ -152,5 +191,35 @@ func processKerberosASREP(hashArray []string) (string, error) {
     asrepUser[0] = hashes.GenerateRandomString() + "@" + hashes.GenerateRandomString() + "." + hashes.GenerateRandomString()
     hashArray[3] = strings.Join(asrepUser, ":")
     return strings.Join(hashArray, "$"), nil
+
+
+
 }
+
+
+
+switch mode {
+			case 1000:
+				_, err = fmt.Fprintln(file, hashArray[3])
+			case 3000:
+				_, err = fmt.Fprintln(file, hashArray[2])
+			case 5500:
+				hashArray[0] = hashes.GenerateRandomString()
+				hashArray[2] = hashes.GenerateRandomString()
+				_, err = fmt.Fprintln(file, strings.Join(hashArray, ":"))
+			case 5600:
+				hashArray[0] = hashes.GenerateRandomString()
+				hashArray[2] = hashes.GenerateRandomString()
+				_, err = fmt.Fprintln(file, strings.Join(hashArray, ":"))
+			case 13100:
+				hashArray[3] = "*" + hashes.GenerateRandomString()
+				hashArray[4] = hashes.GenerateRandomString()
+				hashArray[5] = hashes.GenerateRandomString() + "/" + hashes.GenerateRandomString() + "*"
+				_, err = fmt.Fprintln(file, strings.Join(hashArray, "$"))
+			case 18200:
+				asrepUser := strings.Split(hashArray[3], ":")
+				asrepUser[0] = hashes.GenerateRandomString() + "@" + hashes.GenerateRandomString() + "." + hashes.GenerateRandomString()
+				hashArray[3] = strings.Join(asrepUser, ":")
+				_, err = fmt.Fprintln(file, strings.Join(hashArray, "$"))
+			}
 */
