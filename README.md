@@ -17,7 +17,7 @@ Thoth is a powerful command-line utility designed for processing and managing va
 
 ## Installation
 
-`go get https://github.com/lvpeterson/Thoth`
+`go install github.com/lvpeterson/Thoth`
 
 ## To Do
 Desanitization support for the following modes:
