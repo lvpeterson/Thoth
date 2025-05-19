@@ -2,23 +2,27 @@ package hashes
 
 import (
 	"math/rand"
+	"strings"
 	"thoth/internal/util"
 )
 
 var hashMap map[int]string
 var hashDelim map[int]string
+var hashDelimCount map[int]int
 
 // Check formatting of hashes by hash-mode determiniation
-func HashCheck(mode int, hashString string) {
-	value, exists := hashMap[mode]
+func HashCheck(mode int, hashString string) bool {
+	expectedFormat, exists := hashMap[mode]
 	if exists {
-		// check input string against this
-		util.Green(value)
+		return strings.Count(hashString, hashDelim[mode]) == strings.Count(expectedFormat, hashDelim[mode])
 	} else {
 		util.Red("Hash pairing doesn't exist")
-		return
+		return false
 	}
+}
 
+func GetHashArray(mode int, hashString string) []string {
+	return strings.Split(hashString, hashDelim[mode])
 }
 
 func GenerateRandomString() string {

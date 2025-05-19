@@ -112,4 +112,5 @@ func init() {
 	lmutilCmd.Flags().StringVarP(&ifilePath, "file", "f", "", "Path to the cracked file")
 	lmutilCmd.Flags().StringVarP(&sanitizedFilePath, "sanifile", "s", "", "Path to original sanitized file")
 	lmutilCmd.Flags().StringVarP(&ofilePath, "output", "o", "", "Path to the output file")
+
 }

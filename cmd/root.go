@@ -1,9 +1,20 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 )
+
+const Banner = `
+████████╗██╗  ██╗ ██████╗ ████████╗██╗  ██╗
+╚══██╔══╝██║  ██║██╔═══██╗╚══██╔══╝██║  ██║
+   ██║   ███████║██║   ██║   ██║   ███████║
+   ██║   ██╔══██║██║   ██║   ██║   ██╔══██║
+   ██║   ██║  ██║╚██████╔╝   ██║   ██║  ██║
+   ╚═╝   ╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝
+        Keeper of Mysteries
+`
 
 // Variables for flags
 var mode int
@@ -26,6 +37,7 @@ func Execute() {
 }
 
 func init() {
+	fmt.Println(Banner)
 	// Disable the default completion command
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 }

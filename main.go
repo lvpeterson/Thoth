@@ -1,7 +1,10 @@
 package main
 
-import "thoth/cmd"
+import (
+	"thoth/cmd"
+)
 
 func main() {
+
 	cmd.Execute()
 }
